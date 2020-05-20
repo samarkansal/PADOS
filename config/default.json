@@ -1,0 +1,4 @@
+{
+  "mongoURI": "mongodb+srv://pad123:pad123@cluster0-vut4u.mongodb.net/pados1?retryWrites=true&w=majority",
+  "jwtSecret": "secretwebtoken"
+}
