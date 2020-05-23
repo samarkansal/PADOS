@@ -121,4 +121,24 @@ router.delete("/", auth, async (req, res) => {
   }
 });
 
+// @route  PUT api/profile/places
+// @desc   Add saved placed
+// @access Private
+router.put("/places", auth, async (req, res) => {
+  const { place } = req.body;
+
+  try {
+    const profile = await Profile.findOne({ user: req.user.id });
+
+    profile.places.push(place);
+
+    await profile.save();
+
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;
