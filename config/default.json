@@ -1,5 +1,0 @@
-{
-  "mongoURI": "mongodb+srv://pad123:pad123@cluster0-vut4u.mongodb.net/pados1?retryWrites=true&w=majority",
-  "jwtSecret": "secretwebtoken",
-  "googlePlacesKey": "AIzaSyDg7F6EtPZvTx5_jGIfgvussntA_gMCBBE"
-}
