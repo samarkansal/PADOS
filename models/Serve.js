@@ -6,9 +6,36 @@ const ServeSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "users",
   },
-  text: {
+  note: {
     type: String,
-    required: true,
+  },
+  fromLocation: {
+    name: {
+      type: String,
+      required: true,
+    },
+    lat: {
+      type: mongoose.Decimal128,
+      required: true,
+    },
+    long: {
+      type: mongoose.Decimal128,
+      required: true,
+    },
+  },
+  toLocation: {
+    name: {
+      type: String,
+      required: true,
+    },
+    lat: {
+      type: mongoose.Decimal128,
+      required: true,
+    },
+    long: {
+      type: mongoose.Decimal128,
+      required: true,
+    },
   },
   date: {
     type: Date,
@@ -16,6 +43,10 @@ const ServeSchema = new Schema({
   },
   maxWeight: {
     type: mongoose.Decimal128,
+  },
+  isAvailable: {
+    type: Boolean,
+    default: true,
   },
   comments: [
     {
@@ -35,4 +66,4 @@ const ServeSchema = new Schema({
   ],
 });
 
-module.exports = Serve = mongoose.model("serve", ServeSchema);
+module.exports = mongoose.model("serve", ServeSchema);
