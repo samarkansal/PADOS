@@ -49,6 +49,8 @@ router.post(
         note,
         maxWeight,
         isAvailable,
+        betweenStopovers,
+        stopovers,
       } = req.body;
 
       const user = await User.findById(req.user.id).select("-password");
@@ -59,6 +61,7 @@ router.post(
         toLocation,
         date,
         maxWeight,
+        betweenStopovers,
         isAvailable,
         user: req.user.id,
       });
@@ -129,6 +132,40 @@ router.delete("/:id", auth, async (req, res) => {
     console.error(err.message);
     if (err.kind === "ObjectId") {
       return res.status(404).json({ msg: "Serve Not found" });
+    }
+    res.status(500).send("Server Error");
+  }
+});
+
+// @route   Put api/serve/:serve_id/:stopOver
+// @desc    add stopOver into a serve
+// @access  Private
+router.put("/:serve_id/stopover", auth, async (req, res) => {
+  try {
+    const serve = await Serve.findById(req.params.serve_id);
+
+    if (!serve) {
+      return res.status(404).json({ msg: "Serve Not Found" });
+    }
+    if (serve.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: "User Not authorized" });
+    }
+    const { name, long, lat } = req.body;
+
+    const newStopover = {
+      name,
+      long,
+      lat,
+    };
+    serve.stopovers.push(newStopover);
+
+    await serve.save();
+
+    res.json(serve);
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "Serve not found" });
     }
     res.status(500).send("Server Error");
   }

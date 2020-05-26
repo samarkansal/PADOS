@@ -44,6 +44,26 @@ const ServeSchema = new Schema({
   maxWeight: {
     type: mongoose.Decimal128,
   },
+  stopovers: [
+    {
+      name: {
+        type: String,
+        required: true,
+      },
+      lat: {
+        type: mongoose.Decimal128,
+        required: true,
+      },
+      long: {
+        type: mongoose.Decimal128,
+        required: true,
+      },
+    },
+  ],
+  betweenStopOvers: {
+    type: Boolean,
+    default: true,
+  },
   isAvailable: {
     type: Boolean,
     default: true,

@@ -122,7 +122,7 @@ router.delete("/", auth, async (req, res) => {
 });
 
 // @route  PUT api/profile/places
-// @desc   Add saved placed
+// @desc   Add saved place
 // @access Private
 router.put("/places", auth, async (req, res) => {
   const { place } = req.body;
