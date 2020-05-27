@@ -79,7 +79,7 @@ router.post(
 // @route   GET api/serves
 // @desc    Get all serves
 // @access  Private
-router.get("/", auth, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const serves = await Serve.find().sort({ date: -1 });
     res.json(serves);
@@ -106,6 +106,33 @@ router.get("/:id", auth, async (req, res) => {
     if (err.kind === "ObjectId") {
       return res.status(404).json({ msg: "Serve not found" });
     }
+    res.status(500).send("Server Error");
+  }
+});
+
+// @route   GET api/serves/date/:date
+// @desc    Get all serves of a particular day
+// @access  Private
+router.get("/date/:date", async (req, res) => {
+  try {
+    // var dt = Date(req.params.date);
+    // const dts = dt.toString();
+    var mills = parseInt(req.params.date, 10);
+    var fromDate = new Date(mills);
+    fromDate.setHours(00, 00, 00);
+    var toDate = new Date(mills);
+    toDate.setHours(23, 59, 59);
+
+    const serves = await Serve.find({
+      date: { $lt: toDate, $gt: fromDate },
+    }).sort({ date: 1 });
+    //fromDate = fromDate.getTime();
+    //toDate = toDate.getTime();
+    //console.log(Date.now() + "++++");
+    //console.log(fromDate + "::" + toDate);
+    res.json(serves);
+  } catch (err) {
+    console.error(err.message);
     res.status(500).send("Server Error");
   }
 });
@@ -138,7 +165,7 @@ router.delete("/:id", auth, async (req, res) => {
 });
 
 // @route   Put api/serve/:serve_id/:stopOver
-// @desc    add stopOver into a serve
+// @desc    add stopover into a serve
 // @access  Private
 router.put("/:serve_id/stopover", auth, async (req, res) => {
   try {
