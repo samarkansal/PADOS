@@ -5,13 +5,13 @@ const request = require("request");
 const config = require("config");
 
 // @route      GET api/places/textQuery
-// @desc       Get places from googleMapApi based on text
+// @desc       Get places from googleMapApi based on text(autocomplete)
 // @access     Private
 
 router.get("/textQuery/:place_name", (req, res) => {
   try {
     const options = {
-      uri: `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${
+      uri: `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${
         req.params.place_name
       }&key=${config.get("googlePlacesKey")}`,
       method: "GET",
