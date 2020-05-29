@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { check, validationResult } = require("express-validator");
 const auth = require("../../middleware/auth");
-const getRouteDistance = require("../../util-functions/getRouteDistance");
+const getMinRouteDistance = require("../../util-functions/getMinRouteDistance");
 
 const Serve = require("../../models/Serve");
 const Profile = require("../../models/Profile");
@@ -65,6 +65,7 @@ router.post(
         betweenStopovers,
         isAvailable,
         user: req.user.id,
+        stopovers,
       });
 
       const serve = await newServe.save();
@@ -140,11 +141,11 @@ router.get("/date/:date", async (req, res) => {
   }
 });
 
-// @route   GET api/serves/suitable/:date/:from_long/:from_lat/:from_deflection/:to_long/:to_lat/:to_deflection
+// @route   GET api/serves/suitable/:date/:from_lat/:from_long/:from_deflection/:to_lat/:to_long/:to_deflection
 // @desc    Get all serves such that location matches stopovers or lies in between them(if allowed)
 // @access  Private
 router.get(
-  "/suitable/:date/:from_long/:from_lat/:from_deflection/:to_long/:to_lat/:to_deflection",
+  "/suitable/:date/:from_lat/:from_long/:from_deflection/:to_lat/:to_long/:to_deflection",
   async (req, res) => {
     try {
       const date = parseInt(req.params.date, 10);
@@ -171,76 +172,46 @@ router.get(
           return;
         }
         var toAdd = false;
-        //If stopovers are within {deflection} metres, add the serve into result
+        var latArr = [myServe.fromLocation.lat];
+        var longArr = [myServe.fromLocation.long];
+        for (var i = 0; i < myServe.stopovers.length; i++) {
+          var cur_stopover = myServe.stopovers[i];
+          latArr.push(cur_stopover.lat);
+          longArr.push(cur_stopover.long);
+        }
+        latArr.push(myServe.toLocation.lat);
+        longArr.push(myServe.toLocation.long);
+
+        var totalStopovers = latArr.length;
         var pickUpPossible = false;
-        var pickIndex = -2;
+        var dropOffPossible = false;
+        var pickInd = -1;
+        var minDist;
+        //If stopovers are within {fromDeflection} metres, pickUp is possible
+        var retu = await getMinRouteDistance(
+          fromLong,
+          fromLat,
+          longArr,
+          latArr
+        );
+        pickInd = retu[1];
+        minDist = retu[0];
+
+        if (pickInd == -2) {
+          throw "Google DistanceMatrix API error";
+        }
         if (
-          getRouteDistance(
-            myServe.fromLocation.long,
-            myServe.fromLocation.lat,
-            fromLong,
-            fromLat
-          ) <= fromDeflection
+          pickInd >= 0 &&
+          pickInd < totalStopovers - 1 &&
+          minDist <= fromDeflection
         ) {
           pickUpPossible = true;
-          pickIndex = -1;
-        } else {
-          for (var i = 0; i < myServe.stopovers.length; i++) {
-            var cur_stopover = myServe.stopovers[i];
-            if (
-              getRouteDistance(
-                cur_stopover.long,
-                cur_stopover.lat,
-                fromLong,
-                fromLat
-              ) <= fromDeflection
-            ) {
-              pickUpPossible = true;
-              pickIndex = i;
-              break;
-            }
-          }
         }
-        if (!pickUpPossible) {
-          return;
-        }
+        console.log(minDist);
 
-        var dropOffPossible = false;
-        if (
-          getRouteDistance(
-            myServe.toLocation.long,
-            myServe.toLocation.lat,
-            toLong,
-            toLat
-          ) <= toDeflection
-        ) {
-          dropOffPossible = true;
-        } else {
-          for (var i = pickIndex + 1; i < myServe.stopovers.length; i++) {
-            var cur_stopover = myServe.stopovers[i];
-            if (
-              getRouteDistance(
-                cur_stopover.long,
-                cur_stopover.lat,
-                toLong,
-                toLat
-              ) <= toDeflection
-            ) {
-              dropOffPossible = true;
-              break;
-            }
-          }
-        }
-
-        if (dropOffPossible) {
-          result.add(myServe);
-          return;
-        }
-        //res.json(dist.rows.elements.dist.value);
-        //or If stoppingBetweenStopovers are allowed and location is on path,add the serve
         // console.log("user: " + myServe.note + long);
       });
-      res.json();
+      res.json(serves);
       //console.log(typeof serves);
     } catch (err) {
       console.error(err.message);
