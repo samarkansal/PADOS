@@ -81,7 +81,7 @@ router.post(
 // @route   GET api/serves
 // @desc    Get all serves
 // @access  Private
-router.get("/", async (req, res) => {
+router.get("/", auth, async (req, res) => {
   try {
     const serves = await Serve.find().sort({ date: -1 });
     res.json(serves);
@@ -115,7 +115,7 @@ router.get("/:id", auth, async (req, res) => {
 // @route   GET api/serves/date/:date(inMilliseconds)
 // @desc    Get all serves of a particular day
 // @access  Private
-router.get("/date/:date", async (req, res) => {
+router.get("/date/:date", auth, async (req, res) => {
   try {
     // var dt = Date(req.params.date);
     // const dts = dt.toString();
@@ -133,7 +133,7 @@ router.get("/date/:date", async (req, res) => {
     //toDate = toDate.getTime();
     //console.log(Date.now() + "++++");
     //console.log(fromDate + "::" + toDate);
-    console.log(typeof serves);
+    // console.log(typeof serves);
     res.json(serves);
   } catch (err) {
     console.error(err.message);
@@ -146,6 +146,7 @@ router.get("/date/:date", async (req, res) => {
 // @access  Private
 router.get(
   "/suitable/:date/:from_lat/:from_long/:from_deflection/:to_lat/:to_long/:to_deflection",
+  auth,
   async (req, res) => {
     try {
       const date = parseInt(req.params.date, 10);
@@ -167,7 +168,7 @@ router.get(
       }).sort({ date: 1 });
       //console.log("before:" + typeof serves);
       var result = [];
-      serves.forEach(async (myServe) => {
+      serves.forEach(async (myServe, indi) => {
         if (!myServe.isAvailable) {
           return;
         }
@@ -196,7 +197,7 @@ router.get(
         );
         pickInd = retu[1];
         minDist = retu[0];
-
+        console.log(minDist);
         if (pickInd == -2) {
           throw "Google DistanceMatrix API error";
         }
@@ -206,12 +207,32 @@ router.get(
           minDist <= fromDeflection
         ) {
           pickUpPossible = true;
+        } else {
+          return;
         }
-        console.log(minDist);
+        latArr.slice(pickInd + 1);
+        longArr.slice(pickInd + 1);
 
+        retu = await getMinRouteDistance(toLong, toLat, longArr, latArr);
+        var dropInd = retu[1];
+        minDist = retu[0];
+        if (dropInd == -2) {
+          throw "Google Distance API error";
+        }
+        if (minDist <= toDeflection) {
+          //console.log(myServe);
+          result.push(myServe);
+        }
+        console.log(Date.now());
+
+        if (indi == serves.length - 1) {
+          res.json(result);
+        }
+        //If pickup location is between route & if stop betweenStopOvers is allowed,pickup is possible(to be)
         // console.log("user: " + myServe.note + long);
       });
-      res.json(serves);
+      // console.log(result);
+      //res.json(result);
       //console.log(typeof serves);
     } catch (err) {
       console.error(err.message);
