@@ -86,4 +86,4 @@ const ServeSchema = new Schema({
   ],
 });
 
-module.exports = mongoose.model("serve", ServeSchema);
+module.exports = Serve = mongoose.model("serve", ServeSchema);
