@@ -10,6 +10,38 @@ const BookingSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "users",
   },
+  pickUp: {
+    name: {
+      type: String,
+      required: true,
+    },
+    lat: {
+      type: mongoose.Decimal128,
+      required: true,
+    },
+    long: {
+      type: mongoose.Decimal128,
+      required: true,
+    },
+  },
+  dropOff: {
+    name: {
+      type: String,
+      required: true,
+    },
+    lat: {
+      type: mongoose.Decimal128,
+      required: true,
+    },
+    long: {
+      type: mongoose.Decimal128,
+      required: true,
+    },
+  },
+  note: {
+    type: String,
+    required: true,
+  },
   state: {
     type: String,
     default: "requested",
