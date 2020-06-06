@@ -8,8 +8,13 @@ const ProfileSchema = new mongoose.Schema({
   places: {
     type: [String],
   },
+  reviews: {
+    type: Number,
+    default: 0,
+  },
   rating: {
     type: mongoose.Decimal128,
+    default: 0,
   },
   bio: {
     type: String,

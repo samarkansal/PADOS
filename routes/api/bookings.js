@@ -7,7 +7,7 @@ const config = require("config");
 const Booking = require("../../models/Booking");
 const User = require("../../models/User");
 const Serve = require("../../models/Serve");
-
+const Profile = require("../../models/Profile");
 // @route   POST api/bookings
 // @desc    Create a booking
 // @access  Private
@@ -92,4 +92,54 @@ router.put("/transition/:booking_id/:state", auth, async (req, res) => {
   }
 });
 
+// @route   PUT api/bookings/rate/:booking_id/:stars
+// @desc    Rate a completed booking that will reflect on serve's owner profile
+// @access  Booking Requested by 'user'
+router.put("/rate/:booking_id/:stars", auth, async (req, res) => {
+  try {
+    const booking_id = req.params.booking_id;
+    const stars = parseFloat(req.params.stars);
+
+    const booking = await Booking.findById(booking_id);
+    if (!booking) {
+      return res.status(404).json({ msg: "Booking Not Found" });
+    }
+    if (!(stars > 0 && stars <= 5)) {
+      return res.status(400).json({ msg: "stars must be between 0 and 5" });
+    }
+    if (req.user.id !== booking.requestedBy.toString()) {
+      return res.status(404).json({ msg: "User Not authorized" });
+    }
+    if (booking.state !== "completed") {
+      return res.status(404).json({ msg: "Cannot Rate an incompletd booking" });
+    }
+    //console.log(booking.rating);
+    if (booking.rating != 0) {
+      return res.status(404).json({ msg: "You cannot change your rating" });
+    }
+
+    booking.rating = stars;
+    await booking.save();
+
+    const serve = await Serve.findById(booking.serve);
+    const profile = await Profile.findOne({ user: serve.user });
+    if (!profile) {
+      return res.status(404).json({ msg: "No profile exist" });
+    }
+    profile.reviews += 1;
+    profile.rating =
+      (parseFloat(profile.rating) + parseFloat(stars)) /
+      parseFloat(profile.reviews);
+    console.log(profile);
+    await profile.save();
+
+    res.json(booking);
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "Booking Not Found" });
+    }
+    res.status(500).send("Server Error");
+  }
+});
 module.exports = router;

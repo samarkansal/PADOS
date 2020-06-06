@@ -47,7 +47,7 @@ const BookingSchema = new Schema({
     default: "requested",
   },
   rating: {
-    type: Number,
+    type: mongoose.Decimal128,
     default: 0,
   },
   date: {
